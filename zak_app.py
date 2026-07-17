@@ -21,15 +21,15 @@ st.set_page_config(
 
 # --- 2. CREDENTIAL AUTHENTICATION & RATE LIMIT PROTECTION ---
 # Configured specifically for your sandbox credentials identifier block
-AIRTABLE_TOKEN = st.secrets["airtable_test"]["api_key"]
-BASE_ID = st.secrets["airtable_test"]["base_id"]
+AIRTABLE_TOKEN = st.secrets["airtable"]["api_key"]
+BASE_ID = st.secrets["airtable"]["base_id"]
 
 # To this:
 AIRTABLE_TOKEN = st.secrets["airtable"]["api_key"]
 BASE_ID = st.secrets["airtable"]["base_id"]
 
 if not AIRTABLE_TOKEN or not BASE_ID:
-    st.error("❌ Configuration Missing! Define your `airtable_test` keys inside your Streamlit Cloud secrets manager dashboard.")
+    st.error("❌ Configuration Missing! Define your `airtable` keys inside your Streamlit Cloud secrets manager dashboard.")
     st.stop()
 
 # Initialize the standard API client
