@@ -20,11 +20,6 @@ st.set_page_config(
 )
 
 # --- 2. CREDENTIAL AUTHENTICATION & RATE LIMIT PROTECTION ---
-# Configured specifically for your sandbox credentials identifier block
-AIRTABLE_TOKEN = st.secrets["airtable"]["api_key"]
-BASE_ID = st.secrets["airtable"]["base_id"]
-
-# To this:
 AIRTABLE_TOKEN = st.secrets["airtable"]["api_key"]
 BASE_ID = st.secrets["airtable"]["base_id"]
 
@@ -55,7 +50,7 @@ class TimeoutHTTPAdapter(HTTPAdapter):
 # Inject the rate-limit protector + timeout directly into pyairtable's session
 api.session.mount("https://", TimeoutHTTPAdapter(max_retries=retries, timeout=30))
 
-# Define tables using identical schemas
+# Define tables matching your relational base schema
 companies_table = api.table(BASE_ID, "Companies")
 profiles_table = api.table(BASE_ID, "Profiles")
 metrics_table = api.table(BASE_ID, "Weekly Metrics")
@@ -786,6 +781,9 @@ def compute_profile_standings(df_metrics_source, df_posts_source, target_profile
         followers_prev = prev['Total followers'] if prev is not None else followers_curr
         followers_mom = ((followers_curr - followers_prev) / followers_prev * 100) if followers_prev else 0.0
         followers_inc = followers_curr - first['Total followers']
+        
+        # Compute exact monthly net growth volume
+        followers_month_abs = followers_curr - followers_prev
 
         ssi_curr = current['SSI']
         ssi_prev = prev['SSI'] if prev is not None else ssi_curr
@@ -802,6 +800,7 @@ def compute_profile_standings(df_metrics_source, df_posts_source, target_profile
             'Followers': followers_curr,
             'Followers MoM%': followers_mom,
             'Followers Inc Growth': followers_inc,
+            'Followers Monthly Growth (Abs)': followers_month_abs,
             'SSI': ssi_curr,
             'SSI MoM Shift': ssi_mom,
             'SSI Inc Shift': ssi_inc,
@@ -814,7 +813,7 @@ def compute_profile_standings(df_metrics_source, df_posts_source, target_profile
     if not rows:
         return pd.DataFrame(columns=[
             'Profile Name', 'Job Title', 'Followers', 'Followers MoM%', 
-            'Followers Inc Growth', 'SSI', 'SSI MoM Shift', 'SSI Inc Shift', 
+            'Followers Inc Growth', 'Followers Monthly Growth (Abs)', 'SSI', 'SSI MoM Shift', 'SSI Inc Shift', 
             'Posts Published', 'Views', 'Appearances'
         ])
 
@@ -890,6 +889,33 @@ with tab_team:
     t_col3.metric("Total Content Output", f"{total_posts} Posts")
     t_col4.metric("Combined Active Views (Period)", f"{total_views:,}")
 
+    # --- 🏆 PODIUM ELEMENT: TOP 3 FOLLOWERS GROWTH DRIVERS ---
+    st.markdown("---")
+    st.subheader(f"🏆 Top 3 Follower Growth Drivers ({selected_ym.strftime('%B %Y')})")
+    
+    if not df_team_standings.empty:
+        # Sort profiles based on absolute monthly follower accumulation
+        df_top3 = df_team_standings[df_team_standings['Followers Monthly Growth (Abs)'] >= 0].sort_values(
+            by='Followers Monthly Growth (Abs)', ascending=False
+        ).head(3)
+        
+        if not df_top3.empty:
+            top_cols = st.columns(3)
+            medals = ["🥇 #1 Growth", "🥈 #2 Growth", "🥉 #3 Growth"]
+            
+            for rank, (_, row) in enumerate(df_top3.iterrows()):
+                if rank < len(top_cols):
+                    with top_cols[rank]:
+                        st.metric(
+                            label=f"{medals[rank]} | {row['Profile Name']}",
+                            value=f"+{int(row['Followers Monthly Growth (Abs)']):,} net followers",
+                            delta=f"{row['Followers MoM%']:+.1f}% MoM"
+                        )
+        else:
+            st.info("No positive follower growth variations metrics mapped during this window index.")
+    else:
+        st.info("Active timeline timeline history arrays are empty.")
+
     st.markdown("---")
     st.subheader("📊 Combined Team Macro-Trend Vectors (All-Time History)")
 
@@ -912,7 +938,6 @@ with tab_team:
     st.markdown("### 📋 Detailed Cross-Profile Leaderboard")
     display_team_df = df_team_standings.copy()
     
-    # Structural verification check prevents Pandas KeyError crashes
     if not display_team_df.empty:
         display_team_df['Manager Remarks'] = display_team_df['Profile Name'].map(lambda x: st.session_state.manager_notes.get(x, ""))
         st.dataframe(
