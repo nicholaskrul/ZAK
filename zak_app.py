@@ -18,8 +18,8 @@ st.set_page_config(
 
 # --- 2. AUTHENTICATION & ENHANCED RATE LIMITER ---
 # Pointing to a unique secrets identifier block for the test client
-AIRTABLE_TOKEN = st.secrets["airtable_test"]["api_key"]
-BASE_ID = st.secrets["airtable_test"]["base_id"]
+AIRTABLE_TOKEN = st.secrets["airtable"]["api_key"]
+BASE_ID = st.secrets["airtable"]["base_id"]
 
 if not AIRTABLE_TOKEN or not BASE_ID:
     st.error("❌ Configuration Missing! Define your keys in the dashboard secrets.")
