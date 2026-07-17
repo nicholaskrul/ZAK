@@ -13,7 +13,7 @@ from weasyprint import HTML
 
 # --- 1. APPLICATION CONFIGURATION ---
 st.set_page_config(
-    page_title="Executive Portfolio Analytics Hub",
+    page_title="ZAK LinkedIn Dashboard",
     page_icon="💼",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -823,7 +823,14 @@ def compute_profile_standings(df_metrics_source, df_posts_source, target_profile
 # Process the standings
 df_team_standings = compute_profile_standings(df_metrics, df_posts, all_profiles_list, selected_ym)
 
-# --- 10. TAB LAYOUT ---
+
+# --- 10. PORTAL TITLE HEADER CONFIGURATION ---
+st.title("📊 ZAK LinkedIn Dashboard")
+st.caption("🚀 Version 1.0 | Core Engine Active")
+st.markdown("---")
+
+
+# --- 11. TAB LAYOUT ---
 tab_team, tab_individual = st.tabs(["👥 Team Overview", "🎯 Individual Deep Dive"])
 
 
