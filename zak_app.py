@@ -4,6 +4,7 @@ from pyairtable import Api
 from datetime import datetime
 import io
 import requests
+import os
 from urllib3.util import Retry
 from requests.adapters import HTTPAdapter
 # Object-oriented thread-safe Figure elements
@@ -824,9 +825,20 @@ def compute_profile_standings(df_metrics_source, df_posts_source, target_profile
 df_team_standings = compute_profile_standings(df_metrics, df_posts, all_profiles_list, selected_ym)
 
 
-# --- 10. PORTAL TITLE HEADER CONFIGURATION ---
-st.title("📊 ZAK LinkedIn Dashboard")
-st.caption("🚀 Version 1.0 | Core Engine Active")
+# --- 10. PORTAL TITLE HEADER CONFIGURATION (WITH MASTER LOGO) ---
+col_logo, col_title = st.columns([1, 6])
+
+with col_logo:
+    # Safely load the local repo image asset without throwing initialization errors
+    if os.path.exists("zazk logo.png"):
+        st.image("zazk logo.png", use_container_width=True)
+    else:
+        st.caption("📂 `zazk logo.png` placeholder")
+
+with col_title:
+    st.title("ZAK LinkedIn Dashboard")
+    st.caption("🚀 Version 1.0 | Master Agency Portal Connected")
+
 st.markdown("---")
 
 
@@ -974,7 +986,7 @@ with tab_individual:
         month_posts = individual_posts[individual_posts['YearMonth'] == selected_ym]
 
         avg_dm_reach = month_posts['Decision-Maker Reach %'].mean() * 100 if not month_posts.empty and 'Decision-Maker Reach %' in month_posts.columns else 0.0
-        total_saves = month_posts['Saves'].sum() if not month_posts.empty and 'Saves' in month_posts.columns else 0
+        total_saves = month_posts['Saves'].sum() if not month_posts.empty && 'Saves' in month_posts.columns else 0
         total_sends = month_posts['Sends on LinkedIn'].sum() if not month_posts.empty and 'Sends on LinkedIn' in month_posts.columns else 0
         total_reposts = month_posts['Reposts'].sum() if not month_posts.empty and 'Reposts' in month_posts.columns else 0 
         total_high_intent = total_saves + total_sends + total_reposts
